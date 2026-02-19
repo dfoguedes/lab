@@ -18,12 +18,9 @@ func handleConnection(conn net.Conn) {
 		log.Fatal("Read error: ", err)
 		return
 	}
-	ackMsg := strings.ToUpper(strings.TrimSpace(message))
-	response := fmt.Sprintf("ACK %s\n", ackMsg)
+	ackMsg := strings.TrimSpace(message)
+	response := fmt.Sprintf("New ACK message:%s\n", ackMsg)
 
-	if err != nil {
-		log.Fatal("Server write error: ", err)
-	}
 	conn_dial, err_dial := net.Dial("tcp", "localhost:9999")
 
 	if err_dial != nil {
