@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 type Backend struct {
@@ -12,6 +13,22 @@ type Backend struct {
 	Alive   bool
 }
 
+func healthCheck(backends []*Backend) {
+	for {
+		for _, b := range backends {
+			conn, errDial := net.DialTimeout("tcp", b.Address, 2*time.Second)
+			if errDial != nil {
+				log.Printf("Backend %s went down", b.Address)
+				b.Alive = false
+			} else {
+				log.Printf("Backend %s is back online ", b.Address)
+				b.Alive = true
+				conn.Close()
+			}
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
 func handleConnection(conn net.Conn, backend *Backend) {
 
 	connDial, errDial := net.Dial("tcp", backend.Address)
@@ -54,6 +71,7 @@ func main() {
 		{Address: "localhost:9999", Alive: true},
 	}
 	counter := 0
+	go healthCheck(backends)
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -68,5 +86,4 @@ func main() {
 			}
 		}
 	}
-
 }
