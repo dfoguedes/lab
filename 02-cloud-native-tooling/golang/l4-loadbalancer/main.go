@@ -5,15 +5,20 @@ import (
 	"io"
 	"log"
 	"net"
-	"strings"
 )
 
-func handleConnection(conn net.Conn, backend string) {
+type Backend struct {
+	Address string
+	Alive   bool
+}
 
-	connDial, errDial := net.Dial("tcp", backend)
+func handleConnection(conn net.Conn, backend *Backend) {
+
+	connDial, errDial := net.Dial("tcp", backend.Address)
 
 	if errDial != nil {
-		log.Println("Erro no Dial:", errDial)
+		log.Printf("We could not connect to the backend address: %v", backend.Address)
+		backend.Alive = false
 		return
 	}
 
@@ -41,19 +46,27 @@ func main() {
 		log.Fatal("Error listening:", err)
 		return
 	}
-	fmt.Printf("Listening on port %v", strings.Split(listenPort, ":")[1])
+	fmt.Printf("Listening on port %v\n", listenPort)
 
-	backends := []string{"localhost:9997", "localhost:9998", "localhost:9999"}
-
+	backends := []*Backend{
+		{Address: "localhost:9997", Alive: true},
+		{Address: "localhost:9998", Alive: true},
+		{Address: "localhost:9999", Alive: true},
+	}
 	counter := 0
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			log.Fatal("Error accepting connection: ", err)
 		}
-		target := backends[counter%len(backends)]
-		go handleConnection(conn, target)
-		counter++
+		for i := 0; i < len(backends); i++ {
+			target := backends[counter%len(backends)]
+			counter++
+			if target.Alive {
+				go handleConnection(conn, target)
+				break
+			}
+		}
 	}
 
 }
