@@ -18,11 +18,15 @@ func healthCheck(backends []*Backend) {
 		for _, b := range backends {
 			conn, errDial := net.DialTimeout("tcp", b.Address, 2*time.Second)
 			if errDial != nil {
-				log.Printf("Backend %s went down", b.Address)
-				b.Alive = false
+				if b.Alive {
+					log.Printf("Backend %s went down", b.Address)
+					b.Alive = false
+				}
 			} else {
-				log.Printf("Backend %s is back online ", b.Address)
-				b.Alive = true
+				if !b.Alive {
+					log.Printf("Backend %s is back online ", b.Address)
+					b.Alive = true
+				}
 				conn.Close()
 			}
 		}
