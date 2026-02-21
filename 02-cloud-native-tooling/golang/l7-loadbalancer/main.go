@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"sync"
+	"time"
 )
 
 type Backend struct {
@@ -18,6 +20,31 @@ type LoadBalancer struct {
 	Backends []*Backend
 	Counter  int
 	mux      sync.Mutex
+}
+
+func healthCheck(lb *LoadBalancer) {
+	for {
+		for _, b := range lb.Backends {
+			conn, errDial := net.DialTimeout("tcp", b.URL.Host, 2*time.Second)
+			if errDial != nil {
+				b.mux.Lock()
+				if b.Alive {
+					log.Printf("Backend %s went down", b.URL.Host)
+					b.Alive = false
+				}
+				b.mux.Unlock()
+			} else {
+				b.mux.Lock()
+				if !b.Alive {
+					log.Printf("Backend %s is back online ", b.URL.Host)
+					b.Alive = true
+				}
+				b.mux.Unlock()
+				conn.Close()
+			}
+		}
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func main() {
@@ -56,5 +83,6 @@ func main() {
 			}
 		},
 	}
+	go healthCheck(&lb)
 	log.Fatal(http.ListenAndServe(":8888", proxy))
 }
