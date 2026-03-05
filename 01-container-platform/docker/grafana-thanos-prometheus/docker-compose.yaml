@@ -1,0 +1,147 @@
+networks:
+  monitoring:
+services:
+  minio:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./minio/data:/data
+    networks:
+      - monitoring
+
+  prometheus-org1:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/org1/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/org1/data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=:9091
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.min-block-duration=2h
+      - --storage.tsdb.max-block-duration=2h
+
+    ports:
+      - "9091:9091"
+    networks:
+      - monitoring
+
+  thanos-sidecar-org1:
+    image: quay.io/thanos/thanos:v0.40.1
+    command:
+      - sidecar
+      - --tsdb.path=/prometheus
+      - --prometheus.url=http://prometheus-org1:9091
+      - --objstore.config-file=/etc/thanos/objstore.yml
+    volumes:
+      - ./prometheus/org1/data:/prometheus
+      - ./thanos/objstore.yml:/etc/thanos/objstore.yml
+    depends_on:
+      - prometheus-org1
+      - minio
+    networks:
+      - monitoring
+
+  prometheus-org2:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/org2/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/org2/data:/prometheus
+      - ./prometheus/org2/alerting_rules.yml:/etc/prometheus/alerting_rules.yml 
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=:9092
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.min-block-duration=2h
+      - --storage.tsdb.max-block-duration=2h
+      - --web.external-url=http://prometheus-org2:9092
+    ports:
+      - "9092:9092"
+    networks:
+      - monitoring
+
+  thanos-sidecar-org2:
+    image: quay.io/thanos/thanos:v0.40.1
+    command:
+      - sidecar
+      - --tsdb.path=/prometheus
+      - --prometheus.url=http://prometheus-org2:9092
+      - --objstore.config-file=/etc/thanos/objstore.yml
+    volumes:
+      - ./prometheus/org2/data:/prometheus
+      - ./thanos/objstore.yml:/etc/thanos/objstore.yml
+    depends_on:
+      - prometheus-org2
+      - minio
+    networks:
+      - monitoring
+
+  thanos-store:
+    image: quay.io/thanos/thanos:v0.40.1
+    command:
+      - store
+      - --data-dir=/data
+      - --objstore.config-file=/etc/thanos/objstore.yml
+    volumes:
+      - ./thanos/objstore.yml:/etc/thanos/objstore.yml
+      - ./thanos/data:/data
+    depends_on:
+      - minio
+    ports:
+      - "10901:10901"
+      - "10902:10902"
+    networks:
+      - monitoring
+
+  thanos-query:
+    image: quay.io/thanos/thanos:v0.40.1
+    command:
+      - query
+      - --endpoint=thanos-sidecar-org1:10901
+      - --endpoint=thanos-sidecar-org2:10901
+      - --endpoint=thanos-store:10901
+    ports:
+      - "10903:10902"  
+    networks:
+      - monitoring
+
+  thanos-query-frontend:
+    image: quay.io/thanos/thanos:v0.40.1
+    command:
+      - query-frontend
+      - --query-frontend.downstream-url=http://thanos-query:10902
+      - --query-range.split-interval=1h
+      # - --query-range.response-cache-config=/etc/thanos/cache.yaml
+    ports:
+      - "9094:10902" 
+    networks:
+      - monitoring
+    volumes:
+      - ./thanos/cache.yaml:/etc/thanos/cache.yaml
+    depends_on:
+      - thanos-query
+      - memcached
+
+  memcached:
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+    depends_on:
+      - thanos-query-frontend

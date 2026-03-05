@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+  external_labels:
+    org: "org1"
+    cluster: org1
+    prometheus: prometheus-org1
+scrape_configs:
+  - job_name: "prometheus-org1"
+    static_configs:
+      - targets: ["prometheus-org1:9091"]

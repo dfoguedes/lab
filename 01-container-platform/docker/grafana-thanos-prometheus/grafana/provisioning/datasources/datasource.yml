@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus Org1
+    type: prometheus
+    access: proxy
+    url: http://prometheus-org1:9091
+    isDefault: true
+
+  - name: Prometheus Org2
+    type: prometheus
+    access: proxy
+    url: http://prometheus-org2:9092
+  - name: Thanos Querier
+    type: prometheus
+    access: proxy
+    url: http://thanos-querier:10902
