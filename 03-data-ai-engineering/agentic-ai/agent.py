@@ -4,7 +4,7 @@ import os
 import datetime
 
 client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
-
+LANGUAGE_PROMPT="o agente deve falar em Portugues de portugal, se muito suncinto e pratico."
 history = []
 # LLM does not have memory. We need to provide the history of the conversation in each request.
 
@@ -16,7 +16,7 @@ def summarize(history):
     prompt = "Summarize the following conversation:\n" + "\n".join([f"{content.role}: {content.parts[0].text}" for content in history if content.parts[0].text is not None])
     response = client.models.generate_content(
         model="gemini-2.5-flash-lite", contents=[prompt],
-        config=types.GenerateContentConfig(system_instruction="o agente deve falar em Portugues de portugal, se muito suncinto e pratico.")
+        config=types.GenerateContentConfig(system_instruction=LANGUAGE_PROMPT)
     )
     return response.text
 
@@ -47,8 +47,8 @@ while True:
         history = [types.Content(role="model", parts=[types.Part(text=summary)])]
     response = client.models.generate_content(
         model="gemini-2.5-flash-lite",
-        contents=history, 
-        config=types.GenerateContentConfig(tools=tools,system_instruction="o agente deve falar em Portugues de portugal, se muito suncinto e pratico."),
+        contents=history,
+        config=types.GenerateContentConfig(tools=tools,system_instruction=LANGUAGE_PROMPT)
     )
 
     if (
@@ -66,13 +66,12 @@ while True:
             response = client.models.generate_content(
                 model="gemini-2.5-flash-lite",
                 contents=history,
-                config=types.GenerateContentConfig(tools=tools,system_instruction="o agente deve falar em Portugues de portugal, se muito suncinto e pratico."),
+                config=types.GenerateContentConfig(tools=tools,system_instruction=LANGUAGE_PROMPT),
             )
         else:
             history.append(types.Content(role="tool", parts=[types.Part(function_response=types.FunctionResponse(name=tool_call.name, 
                                                                                                                     response={"result": "Tool not implemented"}))]))
             break
-
-    reply = result
+    reply = response.text
     history.append(types.Content(role="model", parts=[types.Part(text=reply)]))
     print(f"\nGemini: {reply}")
