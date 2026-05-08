@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: nginx-multisource
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: app-dev
+            valuesRepo: 02-cloud-native-tooling/argocd/apps/hello
+            valuesRevision: main
+          - env: prd
+            namespace: app-prd
+            valuesRepo: 02-cloud-native-tooling/argocd/apps/hello
+            valuesRevision: main
+  template:
+    metadata:
+      name: nginx-ms-{{env}}
+    spec:
+      project: default
+      sources:
+        # Source 1: chart Helm
+        - repoURL: https://charts.bitnami.com/bitnami
+          chart: nginx
+          targetRevision: "18.1.0"
+          helm:
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $base/$values/clusters/{{env}}/values.yaml
+        - repoURL: https://github.com/dfoguedes/lab
+          targetRevision: main
+          ref: base
+        - repoURL: "{{valuesRepo}}"
+          targetRevision: "{{valuesRevision}}"
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
