@@ -23,4 +23,9 @@ argocd:
 	$(KUBECTL) apply -n argocd --server-side -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 	$(KUBECTL) -n argocd rollout status deploy/argocd-server --timeout=180s
 
+argocd-ui:
+		@$(KUBECTL) -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+		$(KUBECTL) -n argocd port-forward svc/argocd-server 8080:443
+bootstrap: argocd
+	$(KUBECTL) apply -f gitops/root.yaml
 reset: down up
