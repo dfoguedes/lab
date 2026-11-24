@@ -1,0 +1,13 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.name }}
+  namespace: default
+  labels:
+     {{- include "nginx-example.labels" . | nindent 4}}
+data:
+    {{- range $key, $val := .Values.configMap.data }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
+{{- end }}

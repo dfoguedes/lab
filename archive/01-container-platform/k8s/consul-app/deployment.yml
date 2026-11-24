@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+      # This annotation tells Consul to automatically inject the sidecar
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+    spec:
+      containers:
+        - name: web-container
+          image: hashicorp/http-echo
+          args:
+            - "-text=Hello from Kubernetes!"
+            - "-listen=:80"

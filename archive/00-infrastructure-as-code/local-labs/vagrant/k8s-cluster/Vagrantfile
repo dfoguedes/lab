@@ -1,0 +1,67 @@
+Vagrant.configure("2") do |config|
+  config.vm.box_check_update = false
+
+  config.vm.define "cluster" do |cluster|
+    cluster.vm.hostname = "cluster"
+    cluster.vm.box = "ubuntu/bionic64"
+    cluster.vm.network :private_network, ip: "192.168.56.10"
+  end
+  config.ssh
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  config.vm.provider "virtualbox" do |vb|
+     vb.gui = true
+     vb.memory = "2048"
+     vb.cpus = 2
+  end
+  config.vm.provision "shell", inline: <<-SHELL
+     set -e  # Exit on any error
+     
+     echo "Starting provisioning..."     apt-get update
+     apt-get install -y docker.io curl wget
+     
+     # Add vagrant user to docker group
+     usermod -aG docker vagrant
+     sudo ufw disable
+     echo "Installing k3s..."
+     curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=helm-controller" sh
+     
+     # Wait for k3s to be ready
+     sleep 30
+     # install desktop environment
+     sudo apt install -y --no-install-recommends ubuntu-desktop
+     sudo apt install -y --no-install-recommends virtualbox-guest-dkms virtualbox-guest-utils virtualbox-guest-x11
+     # Install browser
+     wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub|sudo apt-key add -
+     sudo sh -c 'echo \"deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main\" > /etc/apt/sources.list.d/google.list'
+     sudo apt update -y
+     sudo apt upgrade -y
+     sudo usermod -a -G sudo vagrant
+     sudo apt install -y google-chrome-stable
+
+        
+     echo "Setting up kubectl..."
+     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+     alias k="kubectl"
+     # Setup kubectl config for vagrant user
+     mkdir -p /home/vagrant/.kube
+     cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
+     chown -R vagrant:vagrant /home/vagrant/.kube
+     chmod 600 /home/vagrant/.kube/config
+    
+     echo "Installing k9s..."
+     wget -q https://github.com/derailed/k9s/releases/latest/download/k9s_linux_amd64.deb
+     apt install -y ./k9s_linux_amd64.deb
+     
+     apt install -y git
+     # install argocd
+     kubectl create namespace argocd
+     kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+     SHELL
+end
+
+ 

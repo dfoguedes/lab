@@ -1,0 +1,21 @@
+[
+    {
+      "id": "1",
+      "title": "Inception",
+      "release_year": "2010",
+      "director": "Christopher Nolan",
+      "genre": "Science Fiction",
+      "rating": "8.8",
+      "image_url": "https://storage.cloud.google.com/example-121213/inception.jpg"
+    },
+    {
+      "id":"2",
+      "title": "The Matrix",
+      "release_year": "1999",
+      "director": "The Wachowskis",
+      "genre": "Science Fiction",
+      "rating": "8.7",
+      "image_url": "https://storage.cloud.google.com/example-121213/matrix.jpg"
+    }
+  ]
+  

@@ -1,0 +1,20 @@
+name: Webhook event example
+
+on:
+  repository_dispatch: 
+    types:
+      - webhook
+env:
+    TEST: "test"
+jobs:
+  respond-to-dispatch:
+    defaults:
+      run:
+        shell: bash
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: run a script
+        run: | 
+          echo "Event type: $GITHUB_EVENT_NAME"

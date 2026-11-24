@@ -1,0 +1,27 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-egress-by-fqdn
+  namespace: app-a
+spec:
+  endpointSelector:
+    matchLabels:
+      app: nginx-server
+  egress:
+    # Allow DNS queries to kube-dns (UDP 53)
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+    # Allow HTTP/HTTPS egress to specific FQDNs
+    - toFQDNs:
+        - matchPattern: "*.example.com"
+        - matchPattern: "*.google.com"
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP

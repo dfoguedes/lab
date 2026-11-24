@@ -1,0 +1,32 @@
+name: Learn GITHUB Workflow variables
+on: [workflow_dispatch ]
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    outputs:
+      spiderman: ${{steps.spider.outputs.spiderman}}
+    steps:
+      - name: Set captain america value
+        run: |
+          echo "captain_america=MARVEL" >> "$GITHUB_ENV"
+      - name: Use the captain america value
+        run: | 
+          echo $captain_america
+      - name: set spiderman output value
+        id: spider
+        run: | 
+          echo "spiderman=peter" >> "$GITHUB_OUTPUT"
+      - name: get spiderman output value
+        run: | 
+          echo "${{steps.spider.outputs.spiderman}}"
+  Summary: 
+    runs-on: ubuntu-latest
+    needs: [job1]
+    steps:
+      - name: Add a summary
+        run: | 
+          echo "### Everything deployed sucessfully! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Summary:" >> $GITHUB_STEP_SUMMARY
+          echo "- In this action we printed:" >> $GITHUB_STEP_SUMMARY
+          echo "-  ${{needs.job1.outputs.spiderman}}" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,97 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-a
+  labels:
+    purpose: server-app
+spec: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-server
+  namespace: app-a
+  labels:
+    app: nginx-server
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-server
+  template:
+    metadata:
+      labels:
+        app: nginx-server
+        tier: backend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest # Using the official Nginx image
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: app-a
+  labels:
+    app: nginx-server
+spec:
+  selector:
+    app: nginx-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP # Exposes the service only within the cluster
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-b
+  labels:
+    purpose: client-app
+spec: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curl-client
+  namespace: app-b
+  labels:
+    app: curl-client
+    tier: frontend
+spec:
+  replicas: 1 # Start with 1 replica for easier testing
+  selector:
+    matchLabels:
+      app: curl-client
+  template:
+    metadata:
+      labels:
+        app: curl-client
+        tier: frontend
+    spec:
+      containers:
+      - name: curl
+        image: curlimages/curl:latest # A lightweight image with curl pre-installed
+        command: ["sleep", "3600"] # Keep the container running for a while
+        resources:
+          limits:
+            cpu: "50m"
+            memory: "64Mi"
+          requests:
+            cpu: "25m"
+            memory: "32Mi"
+

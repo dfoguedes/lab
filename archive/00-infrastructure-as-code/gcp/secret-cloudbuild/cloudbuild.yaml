@@ -1,0 +1,18 @@
+steps:
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        gcloud parametermanager parameters versions render 1 \
+          --parameter=test \
+          --location=global \
+          --project=$PROJECT_ID > /workspace/test_config.txt
+
+  - name: "bash"
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        echo "Conteúdo do parâmetro 'test':"
+        cat /workspace/test_config.txt

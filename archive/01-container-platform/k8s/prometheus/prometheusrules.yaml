@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    release: prometheus
+  name: api-rules
+spec:
+  groups:
+  - name: minikube
+    rules:
+    - alert: PushGatewayDown
+      expr: up{instance="prometheus-prometheus-pushgateway.default.svc:9091", job="prometheus-pushgateway"} == 0
+      for: 10s
+      labels:
+        team: infra
+      annotations:
+        message: "{{ .Labels.instance }} is down on controlplane."

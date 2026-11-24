@@ -1,0 +1,26 @@
+pipeline {
+     agent any // Use any available agent
+     environment {
+          imageName = 'vprofile' // Name of the Docker image
+     }
+     tools {
+          maven 'maven' // name of the Maven installation tool
+          jdk 'JDK' //  name of the JDK installation tool
+     }
+     stages {
+          // Stage to fetch the code from the repository
+          stage('Fetch code') {
+               // steps are tasks that the pipeline will execute
+               steps { 
+                    git branch: 'docker', url:'https://github.com/hkhcoder/vprofile-project.git'
+               }
+          }
+          stage('Build docker image') {
+               steps {
+                    script {
+                         dockerImage = docker.build(imageName + ":$BUILD_ID", "./Docker-files/app/multistage/")
+                    }
+               }
+          }
+     }
+}

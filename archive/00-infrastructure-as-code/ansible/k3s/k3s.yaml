@@ -1,0 +1,10 @@
+- name: install k3s
+  shell: |
+    curl -sfL https://get.k3s.io | sh -
+  changed_when: false # Prevents Ansible from marking the task as changed every time it runs
+- name: fetch kubeconfig to /tmp/kubeconfig
+  become: true
+  ansible.builtin.fetch: # retrieves files from remote hosts
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /tmp/
+    flat: yes

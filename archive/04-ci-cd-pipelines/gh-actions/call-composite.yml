@@ -1,0 +1,13 @@
+name: Call composite custom action
+on: [workflow_dispatch]
+jobs:
+  call-composite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: call composite step
+        uses: './.github/actions/my-composite-gh'
+        with:
+          who-to-greet: 'Diogo'
+            

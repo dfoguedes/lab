@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  consul:
+    image: hashicorp/consul:latest
+    ports:
+      - "8500:8500"      # HTTP UI/API
+      - "8600:8600/udp"  # DNS (must be UDP)
+    command: agent -dev -client=0.0.0.0 -ui -config-dir=/consul/config
+    networks:
+      - my_network
+    volumes:
+      - ./consul-config:/consul/config
+
+  app:
+    image: hashicorp/http-echo:latest
+    command:
+      - "-text=Hello http echo"
+      - "-listen=:80"
+    ports: 
+      - "8080:80"
+    networks:
+      - my_network
+    labels:
+      - "SERVICE_NAME=web"
+  
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - my_network
+    depends_on:
+      - consul
+      - app
+
+networks:
+  my_network:
+    driver: bridge

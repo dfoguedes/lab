@@ -1,0 +1,14 @@
+# Example systemd service file for a dummy service located at /etc/systemd/system
+[Unit]
+Description=Dummy Service
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=master
+ExecStart=/home/master/dummy.sh
+
+[Install]
+WantedBy=multi-user.target

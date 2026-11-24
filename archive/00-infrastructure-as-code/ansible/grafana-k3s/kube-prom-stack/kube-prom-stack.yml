@@ -1,0 +1,47 @@
+---
+- name: Install helm if not exists
+  become: true
+  unarchive:
+    src: https://get.helm.sh/helm-v3.11.0-linux-amd64.tar.gz
+    dest: /usr/local/bin
+    extra_opts: "--strip-components=1"
+    owner: root
+    group: root
+    mode: 0755
+    remote_src: true
+  args:
+    creates: /usr/local/bin/helm
+- name: Ensure Prometheus Community Helm repo is present
+  become: true
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: https://prometheus-community.github.io/helm-charts
+    state: present
+
+- name: Ensure root's kube dir exists
+  become: true
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    mode: "0700"
+
+- name: Copy k3s kubeconfig for root
+  become: true
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /root/.kube/config
+    remote_src: yes
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Install kube prometheus stack chart
+  become: true
+  kubernetes.core.helm:
+    name: prometheus
+    chart_ref: prometheus-community/kube-prometheus-stack
+    chart_version: "50.3.1"
+    update_repo_cache: true
+    create_namespace: true
+    release_namespace: monitoring
+    atomic: true

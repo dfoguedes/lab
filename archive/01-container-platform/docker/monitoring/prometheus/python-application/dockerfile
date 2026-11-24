@@ -1,0 +1,30 @@
+FROM python:3.13-alpine AS builder
+
+WORKDIR /app
+
+COPY ./src/requirements.txt .
+
+# Install build dependencies and build wheels
+RUN apk add --no-cache build-base \
+    && pip wheel --wheel-dir=/wheels -r requirements.txt
+
+FROM python:3.13-alpine
+
+WORKDIR /app
+
+# Add a non-root user
+RUN adduser -D appuser
+
+# Install runtime dependencies only
+COPY --from=builder /wheels /wheels
+COPY ./src/requirements.txt .
+RUN pip install --no-cache-dir --find-links=/wheels -r requirements.txt \
+    && rm -rf /wheels
+
+COPY ./src/ .
+
+ENV FLASK_APP=server
+
+USER appuser
+
+CMD ["flask", "run", "-h", "0.0.0.0", "-p", "5000"]

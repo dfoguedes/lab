@@ -1,0 +1,34 @@
+pipeline {
+     agent any // Use any available agent
+     tools {
+          maven 'maven' // name of the Maven installation tool
+          jdk 'JDK' //  name of the JDK installation tool
+     }
+     stages {
+          // Stage to fetch the code from the repository
+          stage('Fetch code') {
+               // steps are tasks that the pipeline will execute
+               steps { 
+                    git branch: 'atom', url:'https://github.com/hkhcoder/vprofile-project.git'
+               }
+          }
+          stage('Unit test') {
+               steps {
+                    // Run unit tests using Maven
+                    sh 'mvn test'
+               }
+          }
+          stage('Build') {
+               steps {
+                    // Build the project using Maven
+                    sh 'mvn install -DskipTests'
+               }
+               post {
+                    success {
+                         echo "Archiving artifacts..."
+                         archiveArtifacts artifacts: '**/*.war'
+                    }
+               }
+          }
+     }
+}

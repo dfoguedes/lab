@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-allow-app-b
+  namespace: app-a
+spec:
+  podSelector: # received app traffic
+    matchLabels:
+      app: nginx-server
+  policyTypes:
+    - Ingress
+  ingress: # This section must be filled with the information of the pods trying to connect to the podSelector above
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              purpose: client-app
+        - podSelector:
+            matchLabels:
+              app: curl-client
+      ports:
+        - protocol: TCP
+          port: 80

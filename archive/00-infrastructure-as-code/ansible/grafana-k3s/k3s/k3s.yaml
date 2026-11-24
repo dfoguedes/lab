@@ -1,0 +1,13 @@
+- name: install k3s if missing
+  become: true
+  ansible.builtin.shell: |
+    curl -sfL https://get.k3s.io | sh -
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: fetch kubeconfig to /tmp/kubeconfig
+  become: true
+  ansible.builtin.fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /tmp/
+    flat: yes

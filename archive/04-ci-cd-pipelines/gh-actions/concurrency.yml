@@ -1,0 +1,26 @@
+name: Conditional env variable
+on: 
+  workflow_dispatch:
+    inputs:
+      day-of-the-week:
+        description: "Which day is today?"
+        default: "Sunday"
+        required: true
+env:
+  MY_NAME: "Diogo"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    #environment: 
+    #  name: Production
+    #  url: https://github.com
+    steps:
+      - name: Check day of the week
+        if: ${{ inputs.day-of-the-week == 'Monday' }}
+        run: |
+          echo "Hello ${{ env.MY_NAME }}, today is ${{ inputs.day-of-the-week }}"
+          ${{ job.status }}    
+      

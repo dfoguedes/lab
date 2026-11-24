@@ -1,0 +1,19 @@
+name: Matrix example
+on: [workflow_dispatch]
+jobs:
+    matrix-example:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                animal: ["cat","dog"]
+                fruit: ["banana","pea"]
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Print Matrix values
+              env:
+                ANIMAL: ${{matrix.animal}}
+                FRUIT: ${{matrix.fruit}}
+              run: |
+                echo "Animal: $ANIMAL"
+                echo "Fruit: $FRUIT"

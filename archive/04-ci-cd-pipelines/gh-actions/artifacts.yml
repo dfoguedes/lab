@@ -1,0 +1,32 @@
+name: Share data between jobs
+
+on: [workflow_dispatch]
+
+jobs:
+  job_1:
+    name: Add 3 and 7
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        run: |
+          expr 3 + 7 > math-homework.txt
+      - name: Upload math result for job 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: homework_pre
+          path: math-homework.txt
+          retention-days: 1
+
+  job_2:
+    name: Print the result of job 1 
+    needs: job_1
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v4
+        with:
+          name: homework_pre
+      - shell: bash
+        run: |
+          cat math-homework.txt

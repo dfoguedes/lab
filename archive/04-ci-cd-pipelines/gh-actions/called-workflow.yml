@@ -1,0 +1,22 @@
+name: Reusable workflow
+on: 
+    workflow_call: 
+        inputs:
+            who-to-greet:
+                description: 'The person you want to greet'
+                required: true
+                type: string
+        secrets:
+            token: 
+                description: "the token to use"
+                required: true
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Greeting user
+              run: |
+                echo "Hello ${{ inputs.who-to-greet }}"
+            - name: Output secret masked
+              run: |
+                    echo "The secret is ${{ secrets.token }}"

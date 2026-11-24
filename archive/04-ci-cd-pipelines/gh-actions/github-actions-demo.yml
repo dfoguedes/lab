@@ -1,0 +1,30 @@
+name: "Github actions demo"
+on: 
+  push: 
+     branches:
+      - '!main'
+jobs:
+    Explore-Github-Actions:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Author
+              run: |
+                echo "Github author: ${{github.actor}} 🎩"
+            - name: Triggered event
+              run: |
+                echo "Triggered by event: ${{github.event_name }} 😎"
+            - name: Runner
+              run: |
+                echo "Job is running in ${{runner.os}} 🐧 "  
+            - name: Branch name
+              run: |
+                echo "The name of the branch is: ${{github.ref}}"
+            - name: Check repository
+              uses: actions/checkout@v4
+            - run: |
+               echo  "Cloned the repo: ${{github.repository}} 😸"
+            - name: List files in the directory
+              run: |
+                echo "Listing files:"
+                cd ${{github.workspace}}
+                ls 

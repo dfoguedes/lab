@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+  external_labels: # needed for thanos to identify the source of metrics
+    org: "org2"
+    cluster: org2
+    prometheus: prometheus-org2
+scrape_configs:
+  - job_name: "prometheus-org2"
+    static_configs:
+      - targets: ["prometheus-org2:9092"]
+
+rule_files:
+  - alerting_rules.yml

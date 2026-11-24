@@ -1,0 +1,10 @@
+name: Caller workflow
+on: [workflow_dispatch]
+jobs:
+    use-reusable-workflow:
+        uses: ./.github/workflows/called-workflow.yml
+        with:
+            who-to-greet: 'Diogo Filipe'
+        secrets:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            
