@@ -1,5 +1,0 @@
-pandas
-scikit-learn
-google-cloud-aiplatform
-fsspec
-gcsfs
