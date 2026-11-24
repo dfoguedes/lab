@@ -4,7 +4,6 @@ KUBECTL      := kubectl --context $(CTX)
 
 
 .PHONY: up down status
-u com Succeeded e o rollout do kube-state-metrics foi concluído. Agora verifico se a métrica kube_namespace_annotations já existe, e se alguma namespace tem a anotação de owner.
 up:
 	kind create cluster \
 		--name $(CLUSTER_NAME) \
